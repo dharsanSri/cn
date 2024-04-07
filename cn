@@ -103,3 +103,40 @@ def digis(src,V):
     printsolution(src,dist,pred,V)
    
 digis(0,9)
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+bellman_ford
+def bellman_ford(graph, source):
+    vertices = len(graph)
+    distances = [float('inf')] * vertices
+    distances[source] = 0
+
+    for _ in range(vertices - 1):
+        for u in range(vertices):
+            for v in range(vertices):
+                if graph[u][v] != 0 and distances[u] != float('inf') and distances[u] + graph[u][v] < distances[v]:
+                    distances[v] = distances[u] + graph[u][v]
+
+    # Check for negative cycles
+    for u in range(vertices):
+        for v in range(vertices):
+            if graph[u][v] != 0 and distances[u] != float('inf') and distances[u] + graph[u][v] < distances[v]:
+                print("Graph contains negative weight cycle")
+                return
+
+    return distances
+
+if __name__ == "__main__":
+    # Example graph represented as an adjacency matrix
+    graph = [
+        [0, -1, 4, 0, 0],
+        [0, 0, 3, 2, 2],
+        [0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 5],
+        [0, 0, 0, -3, 0]
+    ]
+
+    source = 0
+    distances = bellman_ford(graph, source)
+    print("Vertex Distance from Source:")
+    for i, distance in enumerate(distances):
+        print(f"{i}: {distance}")
