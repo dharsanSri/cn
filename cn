@@ -1,0 +1,89 @@
+IP FRAGMENTATION
+def calculate_fragments(packet_size, mtu):
+    max_segment_size = mtu - 20  # Assuming 20 bytes for IP header and 20 bytes for TCP header
+    fragments = []
+    offset = 0
+    data_remaining = packet_size
+    while data_remaining > 0:
+        if data_remaining <= max_segment_size:
+            # Last fragment
+            fragments.append((data_remaining, offset, 0))
+            break
+        else:
+            # Not the last fragment
+            fragments.append((max_segment_size, offset, 1))
+            offset += max_segment_size // 8
+            data_remaining -= max_segment_size
+    return fragments
+
+def calculate_fragments_for_multiple_mtus(packet_size, mtus):
+    result = {}
+    for mtu in mtus:
+        fragments = calculate_fragments(packet_size, mtu)
+        result[mtu] = fragments
+    return result
+
+packet_size = 3980
+mtus = [1500]  # Example MTUs
+
+fragments_by_mtu = calculate_fragments_for_multiple_mtus(packet_size, mtus)
+
+for mtu, fragments in fragments_by_mtu.items():
+    print(f"For MTU {mtu}:")
+    for i, fragment in enumerate(fragments):
+        data_size, offset, mf_flag = fragment
+        print(f"[ {data_size} bytes".ljust(15), f"| {offset}".ljust(11), f"| {mf_flag}".ljust(20), "]")
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+djikstra
+
+import sys
+
+
+graph = [
+    [0, 4, 0, 0, 0, 0, 0, 8, 0],
+    [4, 0, 8, 0, 0, 0, 0, 11, 0],
+    [0, 8, 0, 7, 0, 4, 0, 0, 2],
+    [0, 0, 7, 0, 9, 14, 0, 0, 0],
+    [0, 0, 0, 9, 0, 10, 0, 0, 0],
+    [0, 0, 4, 14, 10, 0, 2, 0, 0],
+    [0, 0, 0, 0, 0, 2, 0, 1, 6],
+    [8, 11, 0, 0, 0, 0, 1, 0, 7],
+    [0, 0, 2, 0, 0, 0, 6, 7, 0]
+]
+def printpath(node, pred, V):
+    if pred[node] == -1:
+        print(node, end=" ")
+        return
+    printpath(pred[node], pred, V)
+    print("->", node, end=" ")
+
+def printsolution(src, dist, pred, V):
+    print("Vertex\tDistance\tPath")
+    for node in range(V):
+        print(f"{node}\t{dist[node]}\t\t", end="")
+        printpath(node, pred, V)
+        print()
+
+def mindistance(dist,visitedset,V):
+    minimum = 10000000
+    for i in range(V):
+        if dist[i]<minimum and visitedset[i]==False:
+            minimum = dist[i]
+            index = i
+    return index
+
+def digis(src,V):
+    visitedset = [False]*V
+    dist = [sys.maxsize]*V
+    pred = [-1]*V
+    dist[src]=0
+    for i in range(V):
+        x = mindistance(dist,visitedset,V)
+        visitedset[x]=True
+        for y in range(V):
+            if dist[x] + graph[x][y] < dist[y] and visitedset[y]==False and graph[x][y]>0:
+                dist[y] = graph[x][y]+dist[x]
+                pred[y] = x
+    printsolution(src,dist,pred,V)
+   
+digis(0,9)
