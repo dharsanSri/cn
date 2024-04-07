@@ -1,38 +1,54 @@
 IP FRAGMENTATION
-def calculate_fragments(packet_size, mtu):
-    max_segment_size = mtu - 20  # Assuming 20 bytes for IP header and 20 bytes for TCP header
-    fragments = []
-    offset = 0
-    data_remaining = packet_size
-    while data_remaining > 0:
-        if data_remaining <= max_segment_size:
-            # Last fragment
-            fragments.append((data_remaining, offset, 0))
-            break
+import math 
+
+
+
+def calc(packet_size, MTU_e, header_size):
+    packet_size -= header_size
+    print(packet_size)
+    MTU_e -= header_size
+    MTU_e = math.floor((MTU_e/8))*8
+    print(MTU_e)
+    if(MTU_e > packet_size):
+        dont_fragment = 1
+    no_frag = math.ceil(packet_size/MTU_e)
+    print("No. of fragments", no_frag)
+
+    fragments = [0]*no_frag
+    frag_offset = [0]*no_frag
+    frag_m = [0]*no_frag
+
+    for i in range(0,no_frag):
+        if(i < no_frag-1):
+            fragments[i] = MTU_e + header_size
+            frag_m[i] = 1
         else:
-            # Not the last fragment
-            fragments.append((max_segment_size, offset, 1))
-            offset += max_segment_size // 8
-            data_remaining -= max_segment_size
-    return fragments
+            fragments[i] = packet_size - (no_frag-1)*MTU_e
+            frag_m[i] = 0
+    
+    temp = 0
+    
+    for i in range(1, no_frag):
+        temp = temp + fragments[i-1] - header_size
+        frag_offset[i] = temp/8 
+   
+    return fragments,frag_offset,frag_m
 
-def calculate_fragments_for_multiple_mtus(packet_size, mtus):
-    result = {}
-    for mtu in mtus:
-        fragments = calculate_fragments(packet_size, mtu)
-        result[mtu] = fragments
-    return result
+packet_size = 1800
+MTU_e = 1500
+header_size = 20
+fragments1, frag_offset1, frag_m1 = calc(packet_size, MTU_e, header_size)
+print("tot_size", fragments1)
+print("frag offset",frag_offset1)
+print("more bits", frag_m1)
 
-packet_size = 3980
-mtus = [1500]  # Example MTUs
-
-fragments_by_mtu = calculate_fragments_for_multiple_mtus(packet_size, mtus)
-
-for mtu, fragments in fragments_by_mtu.items():
-    print(f"For MTU {mtu}:")
-    for i, fragment in enumerate(fragments):
-        data_size, offset, mf_flag = fragment
-        print(f"[ {data_size} bytes".ljust(15), f"| {offset}".ljust(11), f"| {mf_flag}".ljust(20), "]")
+MTU_e = 572
+for i in range(len(fragments1)):
+    fragments2, frag_offset2, frag_m2 = calc(fragments1[i], MTU_e, header_size)
+    # cat[] += fragments2
+    print("tot_size", fragments2)
+    print("frag offset",frag_offset2)
+    print("more bits", frag_m2)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 djikstra
 
