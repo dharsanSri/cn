@@ -105,38 +105,55 @@ def digis(src,V):
 digis(0,9)
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 bellman_ford
-def bellman_ford(graph, source):
-    vertices = len(graph)
-    distances = [float('inf')] * vertices
-    distances[source] = 0
+import sys
 
-    for _ in range(vertices - 1):
-        for u in range(vertices):
-            for v in range(vertices):
-                if graph[u][v] != 0 and distances[u] != float('inf') and distances[u] + graph[u][v] < distances[v]:
-                    distances[v] = distances[u] + graph[u][v]
+def print_path(node, pred, V):
+    if pred[node] == -1:
+        print(node, end=" ")
+        return
+    print_path(pred[node], pred, V)
+    print("->", node, end=" ")
+
+def print_solution(src, dist, pred, V):
+    print("Vertex\tDistance\tPath")
+    for node in range(V):
+        print(f"{node}\t{dist[node]}\t\t", end="")
+        print_path(node, pred, V)
+        print()
+
+def bellman_ford(graph, src, V):
+    dist = [float('inf')] * V
+    pred = [-1] * V
+    dist[src] = 0
+
+    # Relax edges repeatedly
+    for _ in range(V - 1):
+        for u in range(V):
+            for v in range(V):
+                if graph[u][v] != 0 and dist[u] != float('inf') and dist[u] + graph[u][v] < dist[v]:
+                    dist[v] = dist[u] + graph[u][v]
+                    pred[v] = u
 
     # Check for negative cycles
-    for u in range(vertices):
-        for v in range(vertices):
-            if graph[u][v] != 0 and distances[u] != float('inf') and distances[u] + graph[u][v] < distances[v]:
+    for u in range(V):
+        for v in range(V):
+            if graph[u][v] != 0 and dist[u] != float('inf') and dist[u] + graph[u][v] < dist[v]:
                 print("Graph contains negative weight cycle")
                 return
 
-    return distances
+    print_solution(src, dist, pred, V)
 
 if __name__ == "__main__":
-    # Example graph represented as an adjacency matrix
     graph = [
-        [0, -1, 4, 0, 0],
-        [0, 0, 3, 2, 2],
-        [0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 5],
-        [0, 0, 0, -3, 0]
+        [0, 4, 0, 0, 0, 0, 0, 8, 0],
+        [4, 0, 8, 0, 0, 0, 0, 11, 0],
+        [0, 8, 0, 7, 0, 4, 0, 0, 2],
+        [0, 0, 7, 0, 9, 14, 0, 0, 0],
+        [0, 0, 0, 9, 0, 10, 0, 0, 0],
+        [0, 0, 4, 14, 10, 0, 2, 0, 0],
+        [0, 0, 0, 0, 0, 2, 0, 1, 6],
+        [8, 11, 0, 0, 0, 0, 1, 0, 7],
+        [0, 0, 2, 0, 0, 0, 6, 7, 0]
     ]
-
-    source = 0
-    distances = bellman_ford(graph, source)
-    print("Vertex Distance from Source:")
-    for i, distance in enumerate(distances):
-        print(f"{i}: {distance}")
+    V = len(graph)
+    bellman_ford(graph, 0, V)
