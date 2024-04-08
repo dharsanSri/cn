@@ -1,1 +1,99 @@
+def initialize_router(name, neighbors):
+    routing_table = {name: (0, None)} # Initialize routing table with own name, cost 0, and no next hop
+    return routing_table, neighbors
 
+def update_routing_table(routing_table, destination, cost, next_hop):
+    routing_table[destination] = (cost, next_hop)
+
+def send_routing_table(routing_table):
+    return routing_table
+
+def receive_routing_table(router_name, routers, neighbor, received_table):
+    routing_table, neighbors = routers[router_name]
+    for destination, (cost, next_hop) in received_table.items():
+        if destination != router_name: # Ignore own routing table
+            new_cost = cost + neighbors[neighbor]
+            if destination not in routing_table or routing_table[destination][0] > new_cost:
+                update_routing_table(routing_table, destination, new_cost, neighbor)
+
+def print_routing_table(router_name, routing_table):
+    print(f"Routing table for Router {router_name}:")
+    for destination, (cost, next_hop) in routing_table.items():
+        print(f"Destination: {destination}, Cost: {cost}, Next Hop: {next_hop}")
+
+def simulate(routers, iterations):
+    for i in range(iterations):
+        print(f"Iteration {i+1}:")
+        for router_name, (routing_table, neighbors) in routers.items():
+            for neighbor, cost in neighbors.items():
+                receive_routing_table(router_name, routers, neighbor, send_routing_table(routers[neighbor][0]))
+        for router_name, (routing_table, _) in routers.items():
+            print_routing_table(router_name, routing_table)
+
+if __name__ == "__main__":
+    routers = {
+        "A": initialize_router("A", {"B": 1, "C": 5}),
+        "B": initialize_router("B", {"A": 1, "C": 3, "D": 4}),
+        "C": initialize_router("C", {"A": 5, "B": 3, "D": 1}),
+        "D": initialize_router("D", {"B": 4, "C": 1})
+    }
+
+    simulate(routers, 5)
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+import math 
+
+def calc(packet_size, MTU_e, header_size):
+    packet_size -= header_size
+    MTU_e -= header_size
+    MTU_e = math.floor((MTU_e/8))*8
+    if(MTU_e > packet_size):
+        dont_fragment = 1
+    no_frag = math.ceil(packet_size/MTU_e)
+    print("No. of fragments", no_frag)
+
+    fragments = [0]*no_frag
+    frag_offset = [0]*no_frag
+    frag_m = [0]*no_frag
+
+    for i in range(0,no_frag):
+        if(i < no_frag-1):
+            fragments[i] = MTU_e + header_size
+            frag_m[i] = 1
+        else:
+            fragments[i] = packet_size - (no_frag-1)*MTU_e + header_size
+            frag_m[i] = 0
+
+    temp = 0
+
+    for i in range(1, no_frag):
+        temp = temp + fragments[i-1] - header_size
+        frag_offset[i] = temp/8 
+
+    return fragments,frag_offset,frag_m
+
+packet_size = int(input("enter the packet size(datagram size): "))
+MTU_e = int(input("Enter MTU: "))
+header_size = int(input("enter the header size"))
+fragments1, frag_offset1, frag_m1 = calc(packet_size, MTU_e, header_size)
+print("fragments:", fragments1)
+print("fragments Offset:", frag_offset1)
+print("fragments MF bits:", frag_m1)
+
+cat = fragments1[:]
+n = int(input("Enter the number of routers: "))
+for _ in range(n):
+    print()
+    emtu = int(input("Enter MTU: "))
+    temp = len(cat)
+    for i in range(temp):
+        fragments2, frag_offset2, frag_m2 = calc(cat[i], emtu, header_size)
+        cat += fragments2
+        print()
+        print("tot_size", fragments2)
+        print("frag offset",frag_offset2)
+        print("more bits", frag_m2)
+    for i in range(temp):  
+        cat.pop(0)
+print("final fragments:", cat)
